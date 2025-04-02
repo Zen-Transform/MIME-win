@@ -1,20 +1,15 @@
-
 import os
 import sys
-import time
-import json
 import logging
-import threading
-import subprocess
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
-from multilingual_ime.key_event_handler import KeyEventHandler
-
-
 from keycodes import *  # for VK_XXX constants
 from textService import *
+from multilingual_ime.key_event_handler import KeyEventHandler
 
+print("PolyKey IME Loaded")
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 # 選單項目和語言列按鈕的 command ID
 ID_SWITCH_LANG = 1
@@ -55,22 +50,10 @@ keyNames = {
 
 # PolyKey Logger
 log_file_path = Path(os.getenv("LOCALAPPDATA")) / "PIME" / "polykey" / "polykey.log"
-temp_input_file_path = (
-    Path(os.getenv("LOCALAPPDATA")) / "PIME" / "polykey" / "pimeinput.json"
-)
-temp_output_file_path = (
-    Path(os.getenv("LOCALAPPDATA")) / "PIME" / "polykey" / "pimeoutput.json"
-)
 
 if not log_file_path.exists():
     log_file_path.parent.mkdir(parents=True, exist_ok=True)
     log_file_path.write_text("")
-if not temp_input_file_path.exists():
-    temp_input_file_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_input_file_path.write_text("")
-if not temp_output_file_path.exists():
-    temp_output_file_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_output_file_path.write_text("")
 
 LOG_MODE = logging.DEBUG
 
@@ -100,7 +83,7 @@ class PolyTextService(TextService):
         TextService.__init__(self, client)
         self.curdir = os.path.abspath(os.path.dirname(__file__))
         self.icon_dir = os.path.join(self.curdir, "icons")
-        self.my_keyeventhandler = KeyEventHandler(verbose_mode=True)
+        self.my_key_event_handler = KeyEventHandler(verbose_mode=True)
 
         # States
         self.langMode = None
@@ -139,86 +122,75 @@ class PolyTextService(TextService):
         pass
 
     def onCompositionTerminated(self, forced):
-        self.my_keyeventhandler.handle_key("enter")
+        self.my_key_event_handler.handle_key("enter")
 
-    def convertKeyEvent(self, keyEvent):
-        charCode = keyEvent.charCode
-        keyCode = keyEvent.keyCode
-        charStr = chr(charCode)
+    def convertKeyEvent(self, key_event):
+        char_code = key_event.charCode
+        key_code = key_event.keyCode
+        char_str = chr(char_code)
 
         key_event = ""
-        if keyCode == VK_RETURN:
+        if key_code == VK_RETURN:
             key_event = "enter"
-        elif keyCode == VK_LEFT:
+        elif key_code == VK_LEFT:
             key_event = "left"
-        elif keyCode == VK_RIGHT:
+        elif key_code == VK_RIGHT:
             key_event = "right"
-        elif keyCode == VK_UP:
+        elif key_code == VK_UP:
             key_event = "up"
-        elif keyCode == VK_DOWN:
+        elif key_code == VK_DOWN:
             key_event = "down"
-        elif keyCode == VK_BACK:
+        elif key_code == VK_BACK:
             key_event = "backspace"
-        elif keyCode == VK_DELETE:
+        elif key_code == VK_DELETE:
             key_event = "delete"
-        elif keyCode == VK_ESCAPE:
+        elif key_code == VK_ESCAPE:
             key_event = "esc"
-        elif keyCode == VK_SPACE:
+        elif key_code == VK_SPACE:
             key_event = "space"
-        elif keyCode == VK_SHIFT:
+        elif key_code == VK_SHIFT:
             key_event = "shift"
-        elif keyCode == VK_CONTROL:
+        elif key_code == VK_CONTROL:
             key_event = "ctrl"
         else:
-            key_event = charStr
+            key_event = char_str
 
         return key_event
 
     def updateUI(self):
-        # Get Result from Test Side
         logger.info("Updating UI")
-        if self.my_keyeventhandler.in_selection_mode:
+        if self.my_key_event_handler.in_selection_mode:
             self.setShowCandidates(True)
-            self.setCandidateList(self.my_keyeventhandler.candidate_word_list)
-            self.setCandidateCursor(self.my_keyeventhandler.selection_index)
+            self.setCandidateList(self.my_key_event_handler.candidate_word_list)
+            self.setCandidateCursor(self.my_key_event_handler.selection_index)
         else:
-            if self.my_keyeventhandler.get_composition_string() == "":
-                self.setCommitString(self.last_composition_string)
+            if (commit_string := self.my_key_event_handler.commit_string) != "":
+                self.setCommitString(commit_string)
 
             self.setShowCandidates(False)
-            self.setCompositionString(self.my_keyeventhandler.get_composition_string())
-            self.setCompositionCursor(self.my_keyeventhandler.composition_index)
-            self.last_composition_string = (
-                self.my_keyeventhandler.get_composition_string()
+            self.setCompositionString(self.my_key_event_handler.composition_string)
+            composition_token_index = self.my_key_event_handler.composition_index
+            composition_index = len(
+                "".join(
+                    self.my_key_event_handler.total_composition_words[
+                        :composition_token_index
+                    ]
+                )
             )
 
+            self.setCompositionCursor(composition_index)
+            self.last_composition_string = self.my_key_event_handler.composition_string
+
     def slow_updateUI(self):
-        self.my_keyeventhandler.slow_handle()
+        self.my_key_event_handler.slow_handle()
         self.updateUI()
 
     def onKeyDown(self, keyEvent):
-        # if self._run_timer != None:
-        #     self._run_timer.cancel()
-
         key_event = self.convertKeyEvent(keyEvent)
-        logger.info(f"key_event: {key_event}")
-
-        # if key_event in ["enter", "left", "right", "down", "up", "esc"]:
-        #     self.my_keyeventhandler.handle_key(key_event)
-        # else:
-        # if keyboard.is_pressed("ctrl") and key_event != "ctrl":
-        #     self.my_keyeventhandler.handle_key("©" + key_event)
-        # elif keyboard.is_pressed("shift") and key_event != "shift":
-        #     self.my_keyeventhandler.handle_key(key_event.upper())
-        # else:
-        # self.my_keyeventhandler.handle_key(key_event)
-
-        # self._run_timer = threading.Timer(0.25, self.slow_handle)
-        # self._run_timer.start()
-        self.my_keyeventhandler.handle_key(key_event)
-        self.my_keyeventhandler.slow_handle()
+        logger.info("key_event: %s", key_event)
+        self.my_key_event_handler.handle_key(key_event)
+        self.my_key_event_handler.slow_handle()
         self.updateUI()
-
         return True
 
     def filterKeyUp(self, keyEvent):
