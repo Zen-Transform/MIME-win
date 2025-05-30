@@ -23,13 +23,21 @@ ID_BUGREPORT = 8
 ID_DICT_BUGREPORT = 9
 ID_CHEWING_HELP = 10
 ID_HASHED = 11
-ID_MOEDICT = 13j
+ID_MOEDICT = 13
 ID_DICT = 14
 ID_SIMPDICT = 15
 ID_LITTLEDICT = 16
 ID_PROVERBDICT = 17
 ID_OUTPUT_SIMP_CHINESE = 18
 ID_USER_PHRASE_EDITOR = 19
+
+# 設定輸入法
+ID_BOPOMOFO_IME = 20
+ID_CANGJIE_IME = 21
+ID_ENGLISH_IME = 22
+ID_PINYIN_IME = 23
+ID_JAPANESE_IME = 24
+ID_SPECIAL_IME = 25
 
 # 按鍵內碼和名稱的對應
 keyNames = {
@@ -49,7 +57,11 @@ keyNames = {
 }
 
 # PolyKey Logger
-log_file_path = Path(os.getenv("LOCALAPPDATA")) / "PIME" / "polykey" / "polykey.log"
+local_appdata = os.getenv("LOCALAPPDATA")
+if local_appdata is None:
+    raise EnvironmentError("LOCALAPPDATA environment variable is not set.")
+
+log_file_path = Path(local_appdata) / "PIME" / "polykey" / "polykey.log"
 
 if not log_file_path.exists():
     log_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -104,10 +116,7 @@ class PolyTextService(TextService):
     def onActivate(self):
         TextService.onActivate(self)
         logger.info("PolyKey Activated")
-
-    def addLangButtons(self):
-        # TODO
-        pass
+        self.addLangButtons()
 
     def removeLangButtons(self):
         # TODO
@@ -200,21 +209,15 @@ class PolyTextService(TextService):
             "backspace",
             "escape",
         ]
-        logger.info("!!!!!!!!!onKeyDown: %s", key_event)
-        logger.info("in_typing_mode: %s", self.in_typing_mode)
-
 
         if self.in_typing_mode:
-            # Handle normaly
+            # Handle normally
             pass
         else:
             if key_event in functional_keys:
-                logger.info(
-                    "Functional key pressed in non-typing mode: %s", key_event
-                )
                 return False
             else:
-                # Open typeing mode and handle key
+                # Open typing mode and handle key
                 self.in_typing_mode = True
 
         logger.info("key_event: %s", key_event)
@@ -231,3 +234,103 @@ class PolyTextService(TextService):
 
     def filterKeyDown(self, keyEvent):
         return True
+
+
+    def onMenu(self, buttonId):
+        if buttonId == "settings" or buttonId == "windows-mode-icon":
+            # 用 json 語法表示選單結構
+            return [
+                # {"text": "多語言輸入法使用說明 (&H)", "id": ID_CHEWING_HELP},
+                # {"text": "編輯使用者詞庫 (&E)", "id": ID_USER_PHRASE_EDITOR},
+                # {"text": "設定多語言輸入法(&W)", "id": ID_SETTINGS},
+                # {},
+                {
+                    "text": (
+                        "✔"
+                        if "bopomofo" in self.my_key_event_handler.activated_imes
+                        else "✘"
+                    )
+                    + " | 注音輸入法(&1)",
+                    "id": ID_BOPOMOFO_IME,
+                },
+                {
+                    "text": (
+                        "✔"
+                        if "english" in self.my_key_event_handler.activated_imes
+                        else "✘"
+                    )
+                    + " | 英文輸入法(&2)",
+                    "id": ID_ENGLISH_IME,
+                },
+                {
+                    "text": (
+                        "✔"
+                        if "cangjie" in self.my_key_event_handler.activated_imes
+                        else "✘"
+                    )
+                    + " | 倉頡輸入法(&3)",
+                    "id": ID_CANGJIE_IME,
+                },
+                {
+                    "text": (
+                        "✔"
+                        if "pinyin" in self.my_key_event_handler.activated_imes
+                        else "✘"
+                    )
+                    + " | 拼音輸入法(&4)",
+                    "id": ID_PINYIN_IME,
+                },
+                {
+                    "text": (
+                        "✔"
+                        if "japanese" in self.my_key_event_handler.activated_imes
+                        else "✘"
+                    )
+                    + " | 日文輸入法(&5)",
+                    "id": ID_JAPANESE_IME,
+                },
+                {},
+                {"text": "回報問題(&B)", "id": ID_BUGREPORT},
+                {"text": "GitHub Repo(&W)", "id": ID_WEBSITE},
+            ]
+        else:
+            logger.warning("Unknown buttonId: %s", buttonId)
+            return []
+
+    def onCommand(self, commandId, commandType):
+        if commandId == ID_SETTINGS:
+            pass
+        elif commandId == ID_BOPOMOFO_IME:
+            self.my_key_event_handler.set_activation_status(
+                "bopomofo", not "bopomofo" in self.my_key_event_handler.activated_imes
+            )
+        elif commandId == ID_CANGJIE_IME:
+            self.my_key_event_handler.set_activation_status(
+                "cangjie", not "cangjie" in self.my_key_event_handler.activated_imes
+            )
+        elif commandId == ID_ENGLISH_IME:
+            self.my_key_event_handler.set_activation_status(
+                "english", not "english" in self.my_key_event_handler.activated_imes
+            )
+        elif commandId == ID_PINYIN_IME:
+            self.my_key_event_handler.set_activation_status(
+                "pinyin", not "pinyin" in self.my_key_event_handler.activated_imes
+            )
+        elif commandId == ID_JAPANESE_IME:
+            self.my_key_event_handler.set_activation_status(
+                "japanese", not "japanese" in self.my_key_event_handler.activated_imes
+            )
+        elif commandId == ID_BUGREPORT:
+            os.startfile("https://github.com/Zen-Transform/polykey-win/issues")
+        elif commandId == ID_WEBSITE:
+            os.startfile("https://github.com/Zen-Transform/polykey-win")
+        else:
+            logger.warning("Unknown commandId: %s", commandId)
+
+    def addLangButtons(self):
+        self.addButton(
+            "windows-mode-icon",
+            icon=(Path(__file__).parent / "icons" / "config.ico").as_posix(),
+            tooltip="中英文切換",
+            commandId=ID_MODE_ICON,
+        )
