@@ -86,6 +86,7 @@ class PolyTextService(TextService):
         self.my_key_event_handler = KeyEventHandler(verbose_mode=True)
 
         # States
+        self.in_typing_mode = False
         self.langMode = None
 
         # Variables
@@ -114,7 +115,7 @@ class PolyTextService(TextService):
 
     def onDeactivate(self):
         logger.info("PolyKey Deactivated")
-        # TODO
+        self.in_typing_mode = False
         pass
 
     def setAutoLearn(self, autoLearn):
@@ -166,6 +167,7 @@ class PolyTextService(TextService):
         else:
             if (commit_string := self.my_key_event_handler.commit_string) != "":
                 self.setCommitString(commit_string)
+                self.in_typing_mode = False
 
             self.setShowCandidates(False)
             self.setCompositionString(self.my_key_event_handler.composition_string)
@@ -187,6 +189,34 @@ class PolyTextService(TextService):
 
     def onKeyDown(self, keyEvent):
         key_event = self.convertKeyEvent(keyEvent)
+
+        functional_keys = [
+            "up",
+            "down",
+            "left",
+            "right",
+            "tab",
+            "enter",
+            "backspace",
+            "escape",
+        ]
+        logger.info("!!!!!!!!!onKeyDown: %s", key_event)
+        logger.info("in_typing_mode: %s", self.in_typing_mode)
+
+
+        if self.in_typing_mode:
+            # Handle normaly
+            pass
+        else:
+            if key_event in functional_keys:
+                logger.info(
+                    "Functional key pressed in non-typing mode: %s", key_event
+                )
+                return False
+            else:
+                # Open typeing mode and handle key
+                self.in_typing_mode = True
+
         logger.info("key_event: %s", key_event)
         self.my_key_event_handler.handle_key(key_event)
         self.my_key_event_handler.slow_handle()
