@@ -8,7 +8,7 @@ from keycodes import *  # for VK_XXX constants
 from textService import *
 from multilingual_ime.key_event_handler import KeyEventHandler
 
-print("PolyKey IME Loaded")
+print("MIME Loaded")
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 # 選單項目和語言列按鈕的 command ID
@@ -90,7 +90,7 @@ host_test_path = Path(__file__).parent / "T" / "host_test.py"
 script_path = Path(__file__)
 
 
-class PolyTextService(TextService):
+class MIMETextService(TextService):
     def __init__(self, client):
         TextService.__init__(self, client)
         self.curdir = os.path.abspath(os.path.dirname(__file__))

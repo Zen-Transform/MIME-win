@@ -7,7 +7,7 @@
 	"icon": "icon.ico",
 	"win8_icon": "",
 	"moduleName": "poly_ime",
-	"serviceName": "PolyTextService",
+	"serviceName": "MIMETextService",
     "configTool": "..\\..\\python3\\python.exe",
     "configToolParams": "config_tool.py config",
     "configToolDir": "."
