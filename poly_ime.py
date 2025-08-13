@@ -56,12 +56,12 @@ keyNames = {
     VK_NEXT: "PageDown",
 }
 
-# PolyKey Logger
+# MIME-win Logger
 local_appdata = os.getenv("LOCALAPPDATA")
 if local_appdata is None:
     raise EnvironmentError("LOCALAPPDATA environment variable is not set.")
 
-log_file_path = Path(local_appdata) / "PIME" / "polykey" / "polykey.log"
+log_file_path = Path(local_appdata) / "PIME" / "MIME-win" / "MIME-win.log"
 
 if not log_file_path.exists():
     log_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -81,7 +81,7 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
-logger.info("PolyKey Logger Initialized")
+logger.info("MIME-win Logger Initialized")
 
 
 # Host Test Path
@@ -98,14 +98,11 @@ class PolyTextService(TextService):
         self.my_key_event_handler = KeyEventHandler(verbose_mode=True)
 
         # States
-        self.in_typing_mode = False
         self.langMode = None
 
         # Variables
         self.composition_string = ""
         self._run_timer = None
-
-        self.last_composition_string = ""
 
         self.customizeUI(
             candFontName="MingLiu", candFontSize=16, candPerRow=1, candUseCursor=True
@@ -115,16 +112,18 @@ class PolyTextService(TextService):
 
     def onActivate(self):
         TextService.onActivate(self)
-        logger.info("PolyKey Activated")
+        logger.info("MIME-win Activated")
         self.addLangButtons()
+        self.my_key_event_handler.set_activation_status("cangjie", False)
+        self.my_key_event_handler.set_activation_status("pinyin", False)
+        self.my_key_event_handler.set_activation_status("japanese", False)
 
     def removeLangButtons(self):
         # TODO
         pass
 
     def onDeactivate(self):
-        logger.info("PolyKey Deactivated")
-        self.in_typing_mode = False
+        logger.info("MIME-win Deactivated")
         pass
 
     def setAutoLearn(self, autoLearn):
@@ -132,40 +131,53 @@ class PolyTextService(TextService):
         pass
 
     def onCompositionTerminated(self, forced):
+        logger.info("Composition terminated, forced: %s", forced)
+        TextService.onCompositionTerminated(self, forced)
         self.my_key_event_handler.handle_key("enter")
 
     def convertKeyEvent(self, key_event):
         char_code = key_event.charCode
         key_code = key_event.keyCode
         char_str = chr(char_code)
+        logger.info(
+            "KeyEvent: charCode=%d, keyCode=%d, charStr='%s'",
+            char_code,
+            key_code,
+            char_str,
+        )
 
-        key_event = ""
+        converted_key_event = ""
         if key_code == VK_RETURN:
-            key_event = "enter"
+            converted_key_event = "enter"
         elif key_code == VK_LEFT:
-            key_event = "left"
+            converted_key_event = "left"
         elif key_code == VK_RIGHT:
-            key_event = "right"
+            converted_key_event = "right"
         elif key_code == VK_UP:
-            key_event = "up"
+            converted_key_event = "up"
         elif key_code == VK_DOWN:
-            key_event = "down"
+            converted_key_event = "down"
         elif key_code == VK_BACK:
-            key_event = "backspace"
+            converted_key_event = "backspace"
         elif key_code == VK_DELETE:
-            key_event = "delete"
+            converted_key_event = "delete"
         elif key_code == VK_ESCAPE:
-            key_event = "esc"
+            converted_key_event = "esc"
         elif key_code == VK_SPACE:
-            key_event = "space"
+            converted_key_event = " "
         elif key_code == VK_SHIFT:
-            key_event = "shift"
+            converted_key_event = "shift"
         elif key_code == VK_CONTROL:
-            key_event = "ctrl"
+            converted_key_event = "ctrl"
         else:
-            key_event = char_str
+            converted_key_event = char_str
+            if key_event.isKeyDown(VK_CONTROL):
+                converted_key_event = "©" + converted_key_event
+            elif key_event.isKeyDown(VK_SHIFT):
+                converted_key_event = converted_key_event.upper()
 
-        return key_event
+        logger.info("Keyevent: %s", converted_key_event)
+        return converted_key_event
 
     def updateUI(self):
         logger.info("Updating UI")
@@ -174,11 +186,15 @@ class PolyTextService(TextService):
             self.setCandidateList(self.my_key_event_handler.candidate_word_list)
             self.setCandidateCursor(self.my_key_event_handler.selection_index)
         else:
-            if (commit_string := self.my_key_event_handler.commit_string) != "":
+            logger.info("Commit String: %s", self.my_key_event_handler.commit_string)
+            if commit_string := self.my_key_event_handler.commit_string:
                 self.setCommitString(commit_string)
-                self.in_typing_mode = False
 
             self.setShowCandidates(False)
+            self.setCandidateList(self.my_key_event_handler.candidate_word_list)
+            logger.info(
+                "Composition String: %s", self.my_key_event_handler.composition_string
+            )
             self.setCompositionString(self.my_key_event_handler.composition_string)
             composition_token_index = self.my_key_event_handler.composition_index
             composition_index = len(
@@ -190,41 +206,17 @@ class PolyTextService(TextService):
             )
 
             self.setCompositionCursor(composition_index)
-            self.last_composition_string = self.my_key_event_handler.composition_string
-
-    def slow_updateUI(self):
-        self.my_key_event_handler.slow_handle()
-        self.updateUI()
 
     def onKeyDown(self, keyEvent):
         key_event = self.convertKeyEvent(keyEvent)
-
-        functional_keys = [
-            "up",
-            "down",
-            "left",
-            "right",
-            "tab",
-            "enter",
-            "backspace",
-            "escape",
-        ]
-
-        if self.in_typing_mode:
-            # Handle normally
-            pass
-        else:
-            if key_event in functional_keys:
-                return False
-            else:
-                # Open typing mode and handle key
-                self.in_typing_mode = True
-
-        logger.info("key_event: %s", key_event)
-        self.my_key_event_handler.handle_key(key_event)
-        self.my_key_event_handler.slow_handle()
-        self.updateUI()
-        return True
+        if self.my_key_event_handler.handle_key(key_event):
+            self.my_key_event_handler.slow_handle()
+            logger.info(
+                "unfreeze_keystrokes: %s", self.my_key_event_handler.unfreeze_keystrokes
+            )
+            self.updateUI()
+            return True
+        return False
 
     def filterKeyUp(self, keyEvent):
         return True
@@ -234,7 +226,6 @@ class PolyTextService(TextService):
 
     def filterKeyDown(self, keyEvent):
         return True
-
 
     def onMenu(self, buttonId):
         if buttonId == "settings" or buttonId == "windows-mode-icon":
@@ -321,9 +312,9 @@ class PolyTextService(TextService):
                 "japanese", not "japanese" in self.my_key_event_handler.activated_imes
             )
         elif commandId == ID_BUGREPORT:
-            os.startfile("https://github.com/Zen-Transform/polykey-win/issues")
+            os.startfile("https://github.com/Zen-Transform/MIME-win/issues")
         elif commandId == ID_WEBSITE:
-            os.startfile("https://github.com/Zen-Transform/polykey-win")
+            os.startfile("https://github.com/Zen-Transform/MIME-win")
         else:
             logger.warning("Unknown commandId: %s", commandId)
 
