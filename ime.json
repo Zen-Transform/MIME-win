@@ -6,7 +6,7 @@
     "fallbackLocale": "zh-TW",
 	"icon": "icon.ico",
 	"win8_icon": "",
-	"moduleName": "poly_ime",
+	"moduleName": "mime_win",
 	"serviceName": "MIMETextService",
     "configTool": "..\\..\\python3\\python.exe",
     "configToolParams": "config_tool.py config",
