@@ -31,13 +31,15 @@ if __name__ == "__main__":
         print("MIME-win is already installed.")
 
     # Create a virtual environment at the specified path
-    if not os.path.exists(f"C:\\Program Files (x86)\\PIME\\python\\input_methods\\{IME_NAME}\\venv"):
+    if not os.path.exists(
+        f"C:\\Program Files (x86)\\PIME\\python\\input_methods\\{IME_NAME}\\venv"
+    ):
         print("Creating virtual environment...")
         command = [
             sys.executable,
             "-m",
             "venv",
-        f"C:\\Program Files (x86)\\PIME\\python\\input_methods\\{IME_NAME}\\venv",
+            f"C:\\Program Files (x86)\\PIME\\python\\input_methods\\{IME_NAME}\\venv",
         ]
         subprocess.run(command, check=True)
     else:
@@ -56,7 +58,6 @@ if __name__ == "__main__":
     #     shell=True
     # )
 
-
     print("Installing dependencies...")
     REQUIREMENTS_PATH = (
         "C:\\Program Files (x86)"
@@ -67,9 +68,52 @@ if __name__ == "__main__":
         r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\venv\Scripts\pip.exe",
         "install",
         "-r",
-        REQUIREMENTS_PATH
+        REQUIREMENTS_PATH,
     ]
+    subprocess.run(PIP_INSTALL_CMD, check=True)
+    print("Dependencies installed successfully.")
+
+    print("Creating Server...")
+    # subprocess.run(
+    #     ["cd", r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win"],
+    #     shell=True,
+    #     check=True,
+    # )
+
+    # subprocess.run(
+    #     [
+    #         r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\venv\Scripts\pyinstaller.exe",
+    #         "-F",
+    #         r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\install\fake-p.py",
+    #     ],
+    #     check=True,
+    # )
     subprocess.run(
-        PIP_INSTALL_CMD,
-        check=True
+        [
+            "copy",
+            r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\dist\fake-p.exe",
+            r"C:\Program Files (x86)\PIME\python\python3\python.exe",
+        ],
+        shell=True,
+        check=True,
     )
+    subprocess.run(
+        [
+            "copy",
+            r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\install\modify-server\server.py",
+            r"C:\Program Files (x86)\PIME\python\server.py",
+        ],
+        shell=True,
+        check=True,
+    )
+
+    print("Server created successfully.")
+
+    print("Registering MIME-win...")
+    subprocess.run(
+        ["Regsvr32", "C:\\Program Files (x86)\\PIME\\x64\\PIMETextService.dll"],
+        check=True,
+    )
+
+    print("MIME-win registered successfully.")
+    print("Installation complete. You can now use MIME-win as an input method now.")
