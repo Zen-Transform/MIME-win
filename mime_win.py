@@ -1,12 +1,32 @@
 import os
 import sys
 import logging
+import json
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
-from keycodes import *  # for VK_XXX constants
-from textService import *
 from multilingual_ime.key_event_handler import KeyEventHandler
+from multilingual_ime.multi_config import DEFAULT_CONFIG
+
+from keycodes import (
+    VK_ESCAPE,
+    VK_RETURN,
+    VK_TAB,
+    VK_DELETE,
+    VK_BACK,
+    VK_UP,
+    VK_DOWN,
+    VK_LEFT,
+    VK_RIGHT,
+    VK_HOME,
+    VK_END,
+    VK_PRIOR,
+    VK_NEXT,
+    VK_SPACE,
+    VK_SHIFT,
+    VK_CONTROL,
+)  # for VK_XXX constants
+from textService import TextService
 
 print("MIME Loaded")
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -61,11 +81,17 @@ local_appdata = os.getenv("LOCALAPPDATA")
 if local_appdata is None:
     raise EnvironmentError("LOCALAPPDATA environment variable is not set.")
 
-log_file_path = Path(local_appdata) / "PIME" / "MIME-win" / "MIME-win.log"
+log_file_path = Path(local_appdata) / "PIME" / "MIME-win" / "MIME_win_config.log"
 
 if not log_file_path.exists():
     log_file_path.parent.mkdir(parents=True, exist_ok=True)
     log_file_path.write_text("")
+
+setting_file_path = Path(local_appdata) / "PIME" / "MIME-win" / "MIME_win_config.json"
+
+if not setting_file_path.exists():
+    setting_file_path.parent.mkdir(parents=True, exist_ok=True)
+    setting_file_path.write_text(json.dumps(DEFAULT_CONFIG))
 
 LOG_MODE = logging.DEBUG
 
@@ -84,12 +110,6 @@ logger.addHandler(file_handler)
 logger.info("MIME-win Logger Initialized")
 
 
-# Host Test Path
-host_test_path = Path(__file__).parent / "T" / "host_test.py"
-
-script_path = Path(__file__)
-
-
 class MIMETextService(TextService):
     def __init__(self, client):
         TextService.__init__(self, client)
@@ -98,7 +118,7 @@ class MIMETextService(TextService):
         self.my_key_event_handler = KeyEventHandler(verbose_mode=True)
 
         # States
-        self.langMode = None
+        self.language_mode = None
 
         # Variables
         self.composition_string = ""
@@ -108,27 +128,38 @@ class MIMETextService(TextService):
             candFontName="MingLiu", candFontSize=16, candPerRow=1, candUseCursor=True
         )
 
-        self.last_seqNum = None
-
     def onActivate(self):
         TextService.onActivate(self)
         logger.info("MIME-win Activated")
         self.addLangButtons()
-        self.my_key_event_handler.set_activation_status("cangjie", False)
-        self.my_key_event_handler.set_activation_status("pinyin", False)
-        self.my_key_event_handler.set_activation_status("japanese", False)
+        self.load_config_settings()
+
+    def onDeactivate(self):
+        logger.info("MIME-win Deactivated")
+        self.removeLangButtons()
+
+    def addLangButtons(self):
+        self.addButton(
+            "windows-mode-icon",
+            icon=(Path(__file__).parent / "icons" / "config.ico").as_posix(),
+            tooltip="中英文切換",
+            commandId=ID_MODE_ICON,
+        )
 
     def removeLangButtons(self):
         # TODO
         pass
 
-    def onDeactivate(self):
-        logger.info("MIME-win Deactivated")
-        pass
+    def load_config_settings(self):
+        logger.info("Loading configuration settings")
+        if setting_file_path.exists():
+            config_dict = json.loads(setting_file_path.read_text())
+            self.my_key_event_handler.set_config(config_dict)
 
-    def setAutoLearn(self, autoLearn):
-        # TODO
-        pass
+    def save_config_settings(self):
+        logger.info("Saving configuration settings")
+        config_dict = self.my_key_event_handler.get_config()
+        setting_file_path.write_text(json.dumps(config_dict))
 
     def onCompositionTerminated(self, forced):
         logger.info("Composition terminated, forced: %s", forced)
@@ -318,10 +349,4 @@ class MIMETextService(TextService):
         else:
             logger.warning("Unknown commandId: %s", commandId)
 
-    def addLangButtons(self):
-        self.addButton(
-            "windows-mode-icon",
-            icon=(Path(__file__).parent / "icons" / "config.ico").as_posix(),
-            tooltip="中英文切換",
-            commandId=ID_MODE_ICON,
-        )
+        self.save_config_settings()
