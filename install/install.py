@@ -64,7 +64,7 @@ if __name__ == "__main__":
     REQUIREMENTS_PATH = (
         "C:\\Program Files (x86)"
         "\\PIME\\python\\input_methods"
-        "\\MIME-win\\requirements.txt"
+        f"\\{IME_NAME}\\requirements.txt"
     )
     PIP_INSTALL_CMD = [
         r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\venv\Scripts\pip.exe",
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     print("Creating Server...")
     subprocess.run(
         [
-            "copy",
+            "move",
             r"C:\Program Files (x86)\PIME\python\python3",
             r"C:\Program Files (x86)\PIME\python\old_python3",
         ],
