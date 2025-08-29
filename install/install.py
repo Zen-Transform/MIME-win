@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 
-IME_NAME = "MIME-win"
+IME_NAME = "MIME_win"
 
 if __name__ == "__main__":
     if sys.version_info < (3, 13):
@@ -23,7 +23,9 @@ if __name__ == "__main__":
     if not os.path.exists(input_methods_dir + "\\" + IME_NAME):
         print("Installing MIME-win...")
         subprocess.run(
-            ["git", "clone", "https://github.com/Zen-Transform/MIME-win.git"],
+            ["git", "clone", "https://github.com/Zen-Transform/MIME-win.git",
+             IME_NAME,
+             ],
             check=True,
             cwd=input_methods_dir,
         )
@@ -65,7 +67,7 @@ if __name__ == "__main__":
         "\\MIME-win\\requirements.txt"
     )
     PIP_INSTALL_CMD = [
-        r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\venv\Scripts\pip.exe",
+        r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\venv\Scripts\pip.exe",
         "install",
         "-r",
         REQUIREMENTS_PATH,
@@ -74,24 +76,29 @@ if __name__ == "__main__":
     print("Dependencies installed successfully.")
 
     print("Creating Server...")
-    # subprocess.run(
-    #     ["cd", r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win"],
-    #     shell=True,
-    #     check=True,
-    # )
-
-    # subprocess.run(
-    #     [
-    #         r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\venv\Scripts\pyinstaller.exe",
-    #         "-F",
-    #         r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\install\fake-p.py",
-    #     ],
-    #     check=True,
-    # )
     subprocess.run(
         [
             "copy",
-            r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\dist\fake-p.exe",
+            r"C:\Program Files (x86)\PIME\python\python3",
+            r"C:\Program Files (x86)\PIME\python\old_python3",
+        ],
+        shell=True,
+        check=True,
+    )
+
+    subprocess.run(
+        [
+            "mkdir",
+            r"C:\Program Files (x86)\PIME\python\python3"
+        ],
+        shell=True,
+        check=True
+    )
+
+    subprocess.run(
+        [
+            "copy",
+            r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\dist\fake-p.exe",
             r"C:\Program Files (x86)\PIME\python\python3\python.exe",
         ],
         shell=True,
@@ -100,7 +107,7 @@ if __name__ == "__main__":
     subprocess.run(
         [
             "copy",
-            r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\install\modify-server\server.py",
+            r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\install\modify-server\server.py",
             r"C:\Program Files (x86)\PIME\python\server.py",
         ],
         shell=True,

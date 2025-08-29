@@ -14,10 +14,13 @@ import subprocess
 
 # Path to the 64-bit Python interpreter (in the virtual environment)
 VENV_PYTHON_PATH = (
-    r"C:\Program Files (x86)\PIME\python\input_methods\MIME-win\venv\Scripts\python.exe"
+    r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\venv\Scripts\python.exe"
 )
 
 # The script to run (can be passed as an argument)
 SCRIPT_TO_RUN = r"C:\Program Files (x86)\PIME\python\server.py"
 # Execute the 64-bit Python interpreter with the specified script
-subprocess.run([VENV_PYTHON_PATH, SCRIPT_TO_RUN], check=True)
+try:
+    subprocess.run([VENV_PYTHON_PATH, SCRIPT_TO_RUN], check=True)
+except subprocess.CalledProcessError as e:
+    print(f"Error occurred while running the script: {e}")
