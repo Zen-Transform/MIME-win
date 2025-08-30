@@ -81,13 +81,13 @@ local_appdata = os.getenv("LOCALAPPDATA")
 if local_appdata is None:
     raise EnvironmentError("LOCALAPPDATA environment variable is not set.")
 
-log_file_path = Path(local_appdata) / "PIME" / "MIME-win" / "MIME_win_config.log"
+log_file_path = Path(local_appdata) / "PIME" / "MIME_win" / "MIME_win.log"
 
 if not log_file_path.exists():
     log_file_path.parent.mkdir(parents=True, exist_ok=True)
     log_file_path.write_text("")
 
-setting_file_path = Path(local_appdata) / "PIME" / "MIME-win" / "MIME_win_config.json"
+setting_file_path = Path(local_appdata) / "PIME" / "MIME_win" / "MIME_win_config.json"
 
 if not setting_file_path.exists():
     setting_file_path.parent.mkdir(parents=True, exist_ok=True)
