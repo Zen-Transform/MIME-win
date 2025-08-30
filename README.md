@@ -4,8 +4,8 @@ MIME-win is a Windows input method developed on top of [MIME](https://github.com
 
 ## Related Projects
 
-* [Multilingual IME](https://github.com/Zen-Transform/Multilingual-IME) : The core of the Multilingual IME
-* [MIME-web](https://github.com/Zen-Transform/MIME-web) : Input method editor as Chrome extension
+* [Multilingual IME](https://github.com/Zen-Transform/Multilingual-IME): The core of the Multilingual IME
+* [MIME-web](https://github.com/Zen-Transform/MIME-web): Input method editor as a Chrome extension
 
 ## Installation
 
@@ -18,7 +18,7 @@ MIME-win is a Windows input method developed on top of [MIME](https://github.com
 
 * Download [Python 3.13](https://www.python.org/downloads/)
 * Add Python to the environment variables
-* (You can skip this if you already have Python 3.13)
+* (You can skip this if you already have Python 3.13 installed.)
 
 ### 2. Step 2: Install PIME
 
@@ -29,20 +29,21 @@ MIME-win is a Windows input method developed on top of [MIME](https://github.com
 
 * 3.1 Download the MIME-win [install.py]()
 * 3.2 Open a terminal as **administrator**
-* 3.3 Run `python` to execute `install.py` in the terminal
+* 3.3 Run `python install.py` in the terminal
 
     ```shell
     > cd [path to where install.py is located]
-    
     > python install.py
     ```
 
-* 3.4 Wait for the installation to complete
+* 3.4 Wait for the installation to complete.
 * 3.5 If you see **'Installation complete'** in the terminal, MIME-win has been installed successfully.
 
-### 4. Final reminders
+### 4. Final Reminders
 
+* You may need to restart your computer to start using MIME-win.
 * 4.1 After installing **MIME-win**, 新酷音輸入法 will no longer be available. (This is because PIME has not been maintained for a long time and does not support Python 3.13.)
+* The log file and the config file for MIME-win can be found at `AppData\Local\PIME\MIME-win\`
 
 ## Bug Report
 
@@ -50,4 +51,5 @@ Please report any issues [here](https://github.com/Zen-Transform/MIME-win/issues
 
 ## License
 
+MIME-win is released under the [MIT License](https://github.com/Zen-Transform/MIME-win/blob/master/LICENSE.txt).
 MIME-win is release under [MIT License](https://github.com/Zen-Transform/MIME-win/blob/master/LICENSE.txt).
