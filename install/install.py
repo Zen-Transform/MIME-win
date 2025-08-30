@@ -1,14 +1,19 @@
 import os
 import sys
 import subprocess
+from colorama import init, Fore, Style
 
-IME_NAME = "MIME_win"
 
 if __name__ == "__main__":
+    IME_NAME = "MIME_win"
+    init()
+
     if sys.version_info < (3, 13):
         print(
-            "Python version is insufficient. Python 3.13 or higher is required. current version: %s"
+            Fore.RED
+            + "Python version is insufficient. Python 3.13 or higher is required. current version: %s"
             % sys.version,
+            Fore.RESET,
         )
         sys.exit(1)
 
@@ -21,22 +26,25 @@ if __name__ == "__main__":
 
     # Install MIME-win from GitHub
     if not os.path.exists(input_methods_dir + "\\" + IME_NAME):
-        print("Installing MIME-win...")
+        print(Fore.WHITE + "Installing MIME-win..." + Style.RESET_ALL)
         subprocess.run(
-            ["git", "clone", "https://github.com/Zen-Transform/MIME-win.git",
-             IME_NAME,
-             ],
+            [
+                "git",
+                "clone",
+                "https://github.com/Zen-Transform/MIME-win.git",
+                IME_NAME,
+            ],
             check=True,
             cwd=input_methods_dir,
         )
     else:
-        print("MIME-win is already installed.")
+        print(Fore.GREEN + "MIME-win is already installed." + Style.RESET_ALL)
 
     # Create a virtual environment at the specified path
     if not os.path.exists(
         f"C:\\Program Files (x86)\\PIME\\python\\input_methods\\{IME_NAME}\\venv"
     ):
-        print("Creating virtual environment...")
+        print(Fore.WHITE + "Creating virtual environment..." + Style.RESET_ALL)
         command = [
             sys.executable,
             "-m",
@@ -45,22 +53,9 @@ if __name__ == "__main__":
         ]
         subprocess.run(command, check=True)
     else:
-        print("Virtual environment is already created.")
+        print(Fore.GREEN + "Virtual environment is already created." + Style.RESET_ALL)
 
-    # print("Activating virtual environment...")
-    # # Activate the virtual environment
-    # ACTIVATE_SCRIPT = (
-    #     r"C:\Program Files (x86)"
-    #     r"\PIME\python\input_methods"
-    #     r"\MIME-win\venv\Scripts\activate.bat"
-    # )
-    # subprocess.run(
-    #     f'cmd /k "{ACTIVATE_SCRIPT}"',
-    #     check=True,
-    #     shell=True
-    # )
-
-    print("Installing dependencies...")
+    print(Fore.WHITE + "Installing dependencies..." + Style.RESET_ALL)
     REQUIREMENTS_PATH = (
         "C:\\Program Files (x86)"
         "\\PIME\\python\\input_methods"
@@ -73,54 +68,77 @@ if __name__ == "__main__":
         REQUIREMENTS_PATH,
     ]
     subprocess.run(PIP_INSTALL_CMD, check=True)
-    print("Dependencies installed successfully.")
+    print(Fore.GREEN + "Dependencies installed successfully." + Style.RESET_ALL)
 
-    print("Creating Server...")
-    subprocess.run(
-        [
-            "move",
-            r"C:\Program Files (x86)\PIME\python\python3",
-            r"C:\Program Files (x86)\PIME\python\old_python3",
-        ],
-        shell=True,
-        check=True,
-    )
+    print(Fore.WHITE + "Creating Server..." + Style.RESET_ALL)
+    # Skip creating server if old_python3 already exists
+    old_python3_path = r"C:\Program Files (x86)\PIME\python\old_python3"
+    if os.path.exists(old_python3_path):
+        print(
+            Fore.YELLOW
+            + "Server already created. Skipping server creation steps."
+            + Style.RESET_ALL
+        )
+    else:
+        subprocess.run(
+            [
+                "move",
+                r"C:\Program Files (x86)\PIME\python\python3",
+                r"C:\Program Files (x86)\PIME\python\old_python3",
+            ],
+            shell=True,
+            check=True,
+        )
 
-    subprocess.run(
-        [
-            "mkdir",
-            r"C:\Program Files (x86)\PIME\python\python3"
-        ],
-        shell=True,
-        check=True
-    )
+        subprocess.run(
+            ["mkdir", r"C:\Program Files (x86)\PIME\python\python3"],
+            shell=True,
+            check=True,
+        )
 
-    subprocess.run(
-        [
-            "copy",
-            r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\dist\fake-p.exe",
-            r"C:\Program Files (x86)\PIME\python\python3\python.exe",
-        ],
-        shell=True,
-        check=True,
-    )
-    subprocess.run(
-        [
-            "copy",
-            r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\install\modify-server\server.py",
-            r"C:\Program Files (x86)\PIME\python\server.py",
-        ],
-        shell=True,
-        check=True,
-    )
+        subprocess.run(
+            [
+                "copy",
+                r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\dist\fake-p.exe",
+                r"C:\Program Files (x86)\PIME\python\python3\python.exe",
+            ],
+            shell=True,
+            check=True,
+        )
+        subprocess.run(
+            [
+                "copy",
+                r"C:\Program Files (x86)\PIME\python\input_methods\MIME_win\install\modify-server\server.py",
+                r"C:\Program Files (x86)\PIME\python\server.py",
+            ],
+            shell=True,
+            check=True,
+        )
+        print(Fore.GREEN + "Server created successfully." + Style.RESET_ALL)
 
-    print("Server created successfully.")
-
-    print("Registering MIME-win...")
+    print(Fore.WHITE + "Registering MIME-win..." + Style.RESET_ALL)
     subprocess.run(
         ["Regsvr32", "C:\\Program Files (x86)\\PIME\\x64\\PIMETextService.dll"],
         check=True,
     )
-
-    print("MIME-win registered successfully.")
-    print("Installation complete. You can now use MIME-win as an input method now.")
+    print(Fore.GREEN + "MIME-win registered successfully." + Style.RESET_ALL)
+    print(Fore.WHITE + "\nInstallation complete!" + Style.RESET_ALL)
+    print(
+        Fore.WHITE
+        + "MIME-win is now installed and ready to use as an input method."
+        + Style.RESET_ALL
+    )
+    print(
+        Fore.YELLOW
+        + "IMPORTANT: A system restart is required to finish the installation "
+        "and activate MIME-win." + Style.RESET_ALL
+    )
+    answer = input("Restart now? (y/n): ").strip().lower()
+    if answer == "y":
+        subprocess.run(["shutdown", "/r", "/t", "0"], check=True)
+    else:
+        print(
+            Fore.YELLOW
+            + "Restart cancelled. Please restart your computer manually to complete "
+            "the installation." + Style.RESET_ALL
+        )
